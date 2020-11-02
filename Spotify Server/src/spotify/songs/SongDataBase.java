@@ -28,7 +28,7 @@ public class SongDataBase {
             while (scanner.hasNextLine()) {
                 Arrays.stream(scanner.nextLine().split(";")).forEach(i -> {
                     String[] data = i.split(",");
-                    if (songs.put(Integer.parseInt(data[0]), new Song(Arrays.stream(data).toArray(String[]::new))) != null) {
+                    if (songs.put(Integer.parseInt(data[0]), new Song(Arrays.stream(data).map(String::trim).toArray(String[]::new))) != null) {
                         songs.clear();
                         System.out.println("Error in id");
                         throw new IllegalArgumentException();
