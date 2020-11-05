@@ -4,11 +4,12 @@ import spotify.songs.Song;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Playlist {
   private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
-  private final ArrayList<Song> songs;
+  private final List<Song> songs;
   private String name;
 
   public Playlist(String name) {

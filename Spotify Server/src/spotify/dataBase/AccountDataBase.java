@@ -10,8 +10,8 @@ public class AccountDataBase {
   private final SongDataBase sdb;
   private final String dbAccountsLocation;
   private final String songCounterFile;
-  private final HashMap<String, Account> accounts;
-  private final HashMap<Song, Integer> songCounter;
+  private final Map<String, Account> accounts;
+  private final Map<Song, Integer> songCounter;
 
   public AccountDataBase(String adb, String sdb, String songsC) {
     dbAccountsLocation = adb;
@@ -62,7 +62,9 @@ public class AccountDataBase {
   public boolean removeAccount(String username, String password) {
     if (validateAccount(username, password)) {
       File accountFile = new File(dbAccountsLocation + username + ".sg");
-      accountFile.delete();
+      if (!accountFile.delete()) {
+        throw new RuntimeException("Account file cannot be deleted");
+      }
       accounts.remove(username);
       return true;
     }
@@ -125,6 +127,7 @@ public class AccountDataBase {
     return sdb.getSongs(nameOrArtist);
   }
 
+  @SuppressWarnings("SuspiciousMethodCalls")
   public void top(int max, PrintWriter pw) {
     songCounter.keySet().stream()
         .sorted(Comparator.comparingInt(songCounter::get).reversed())

@@ -5,11 +5,12 @@ import spotify.songs.SongDataBase;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.PatternSyntaxException;
 
 public class Account {
-  private final ArrayList<Playlist> playlists;
+  private final List<Playlist> playlists;
   private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
 
   public Account() {
@@ -19,7 +20,7 @@ public class Account {
   public Account(String[] data, final SongDataBase sdb) {
     reentrantReadWriteLock.writeLock().lock();
     playlists = new ArrayList<>();
-    loadAccountPlaylitsts(data, sdb);
+    loadAccountPlaylists(data, sdb);
     reentrantReadWriteLock.writeLock().unlock();
   }
 
@@ -49,7 +50,7 @@ public class Account {
     }
   }
 
-  private void loadAccountPlaylitsts(String[] data, final SongDataBase sdb) {
+  private void loadAccountPlaylists(String[] data, final SongDataBase sdb) {
     try {
       for (String playlistInfo : data) {
         playlists.add(new Playlist(playlistInfo.substring(0, playlistInfo.indexOf("{"))));
