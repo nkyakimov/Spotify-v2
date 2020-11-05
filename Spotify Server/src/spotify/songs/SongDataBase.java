@@ -5,10 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class SongDataBase {
-  private final HashMap<Integer, Song> songs;
+  private final Map<Integer, Song> songs;
   private final String dbSongsLocation;
 
   public SongDataBase(String dbSongsLocation) {
