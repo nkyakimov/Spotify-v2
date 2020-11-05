@@ -118,8 +118,8 @@ public class SpotifyClientHandler implements Runnable {
           }
 
         } else if (request.startsWith("play")) {
-          Socket tempSocket = tempServerSocket.accept();
           Song choice = chooseSong(request.substring(request.indexOf(" ") + 1).trim(), pr, bf);
+          Socket tempSocket = tempServerSocket.accept();
           if (choice != null) {
             spl = new SongPlayer(choice, tempSocket);
             program.listen(choice);
@@ -131,6 +131,7 @@ public class SpotifyClientHandler implements Runnable {
                     + " by "
                     + Arrays.toString(choice.getArtists().toArray()));
           } else {
+            tempSocket.close();
             pr.println("No such song");
           }
         } else if (request.equals("stop") && spl != null) {
