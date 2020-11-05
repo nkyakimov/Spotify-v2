@@ -37,17 +37,13 @@ public class Player implements Runnable {
               Integer.parseInt(br.readLine()),
               Float.parseFloat(br.readLine()),
               Boolean.parseBoolean(br.readLine()));
-      SourceDataLine.Info info =
-          new DataLine.Info(
-              SourceDataLine.class,
-              format,
-              ((int) Long.parseLong(br.readLine()) * format.getFrameSize()));
+      SourceDataLine.Info info = new DataLine.Info(SourceDataLine.class, format, 2048);
       SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
       line.open(format);
       line.start();
 
       int numRead;
-      byte[] buff = new byte[Integer.parseInt((br.readLine()))];
+      byte[] buff = new byte[2048];
       while ((numRead = is.read(buff)) >= 0 && !stopped) {
         line.write(buff, 0, numRead);
       }
