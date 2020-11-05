@@ -33,6 +33,7 @@ public class SongPlayer implements Runnable {
       PrintWriter pr = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
       AudioInputStream stream = AudioSystem.getAudioInputStream(new File(song.getLocation()));
       AudioFormat format = stream.getFormat();
+      System.out.println(format.getEncoding());
       if (format.getEncoding() != AudioFormat.Encoding.PCM_SIGNED) {
         format =
             new AudioFormat(
@@ -42,7 +43,7 @@ public class SongPlayer implements Runnable {
                 format.getChannels(),
                 format.getFrameSize() * 2,
                 format.getFrameRate(),
-                true); // big endian
+                true);
         stream = AudioSystem.getAudioInputStream(format, stream);
       }
       pr.println(format.getSampleRate());
@@ -51,11 +52,9 @@ public class SongPlayer implements Runnable {
       pr.println(format.getFrameSize());
       pr.println(format.getFrameRate());
       pr.println(format.isBigEndian());
-      pr.println(stream.getFrameLength());
 
       int numRead;
-      int size = 64;
-      pr.println(size);
+      int size = 8192;
       byte[] buff = new byte[size];
       while ((numRead = stream.read(buff)) >= 0 && !stopped) {
         osw.write(buff, 0, numRead);
