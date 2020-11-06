@@ -1,9 +1,10 @@
 package spotify.songs;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Song {
+public class Song implements Serializable {
   private final String name;
   private final ArrayList<String> artists;
   private final double length;
@@ -17,8 +18,8 @@ public class Song {
       System.arraycopy(songInformation, 3, artist, 0, songInformation.length - 4);
     id = Integer.parseInt(songInformation[0]);
     name = songInformation[1];
-    artists = new ArrayList<>(Arrays.asList(artist));
     length = Double.parseDouble(songInformation[2]);
+    artists = new ArrayList<>(Arrays.asList(artist));
     location = songInformation[songInformation.length - 1];
   }
 
@@ -57,5 +58,8 @@ public class Song {
 
   public String toString() {
     return name + "\t" + getLengthString() + "\t" + getArtists(); // + "  location: "+location;
+  }
+  public String toServer() {
+    return "id "+id+" name "+name + "\t" + getLengthString() + "\t" + getArtists() + "  location: "+location;
   }
 }

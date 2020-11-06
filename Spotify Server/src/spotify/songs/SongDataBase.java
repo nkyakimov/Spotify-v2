@@ -1,15 +1,11 @@
 package spotify.songs;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Arrays;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class SongDataBase {
-  private final Map<Integer, Song> songs;
+  private Map<Integer, Song> songs;
   private final String dbSongsLocation;
 
   public SongDataBase(String dbSongsLocation) {
@@ -18,8 +14,13 @@ public class SongDataBase {
     loadSongDataBase();
   }
 
+  /*
   public Song getSong(final Integer id) {
     return songs.get(id);
+  }
+  */
+  public void print() {
+    songs.values().forEach(i -> System.out.println(i.toServer()));
   }
 
   public Song[] getSongs(final String nameOrArtist) {
@@ -27,35 +28,73 @@ public class SongDataBase {
   }
 
   private void loadSongDataBase() {
-    try (Scanner scanner = new Scanner(new File(dbSongsLocation))) {
-      while (scanner.hasNextLine()) {
-        Arrays.stream(scanner.nextLine().split(";"))
-            .forEach(
-                i -> {
-                  String[] data = i.split(",");
-                  if (songs.put(
-                          Integer.parseInt(data[0]),
-                          new Song(Arrays.stream(data).map(String::trim).toArray(String[]::new)))
-                      != null) {
-                    songs.clear();
-                    System.out.println("Error in id");
-                    throw new IllegalArgumentException();
-                  }
-                });
-      }
+    try (FileInputStream fis = new FileInputStream(dbSongsLocation);
+        ObjectInputStream ois = new ObjectInputStream(fis)) {
+      songs = (Map<Integer, Song>) ois.readObject();
     } catch (FileNotFoundException e) {
-      createSongDataBase();
+      if (createDemoSongDataBase()) {
+        loadSongDataBase();
+      }
+    } catch (Exception ignored) {
+
     }
   }
 
-  private void createSongDataBase() {
-    File file = new File(dbSongsLocation);
-    try {
-      if (!file.createNewFile()) {
-        throw new IOException();
+  public void updateSongDataBase() {
+    try (FileOutputStream file = new FileOutputStream(dbSongsLocation);
+        ObjectOutputStream out = new ObjectOutputStream(file)) {
+      out.writeObject(songs);
+    } catch (FileNotFoundException e) {
+      if (createDemoSongDataBase()) {
+        updateSongDataBase();
       }
-    } catch (IOException ioException) {
-      System.err.println("Cant create sdb file");
+    } catch (Exception ignored) {
+
+    }
+  }
+
+  private boolean createDemoSongDataBase() {
+    File newFile = new File(dbSongsLocation);
+    try {
+      if (!newFile.createNewFile()) {
+        return false;
+      }
+    } catch (IOException e) {
+      return false;
+    }
+    try (FileOutputStream file = new FileOutputStream(dbSongsLocation);
+        ObjectOutputStream out = new ObjectOutputStream(file)) {
+
+      Map<Integer, Song> newSongs = new HashMap<>();
+      newSongs.put(
+          1,
+          new Song(
+              "7,Piano Sonata 2,32.51,Rachmaninoff,C:/Users/N/Desktop/Java/SU_JAVA/project_spotify/Spotify/songs/rachPS2.wav"
+                  .split(",")));
+      out.writeObject(newSongs);
+      return true;
+    } catch (IOException ignored) {
+
+    }
+    return false;
+  }
+
+  public void addSong(String info) {
+    try {
+      String[] data = info.split(",");
+      if (songs.get(Integer.parseInt(data[0].trim())) == null) {
+        songs.put(Integer.parseInt(data[0].trim()), new Song(data));
+      } else {
+        throw new Exception();
+      }
+    } catch (Exception e) {
+      System.err.println("Cannot add song");
+    }
+  }
+
+  public void removeSong(int parseInt) {
+    if (songs.get(parseInt) != null) {
+      System.out.println("Removed " + songs.remove(parseInt));
     }
   }
 }
