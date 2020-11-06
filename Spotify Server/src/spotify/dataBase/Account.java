@@ -1,27 +1,17 @@
 package spotify.dataBase;
 
-import spotify.songs.Song;
-import spotify.songs.SongDataBase;
-
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.PatternSyntaxException;
 
-public class Account {
+public class Account implements Serializable {
   private final List<Playlist> playlists;
   private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
 
   public Account() {
     playlists = new ArrayList<>();
-  }
-
-  public Account(String[] data, final SongDataBase sdb) {
-    reentrantReadWriteLock.writeLock().lock();
-    playlists = new ArrayList<>();
-    loadAccountPlaylists(data, sdb);
-    reentrantReadWriteLock.writeLock().unlock();
   }
 
   public void removePlaylist(Playlist i) {
@@ -50,6 +40,20 @@ public class Account {
     }
   }
 
+  public void print(PrintWriter pr) {
+    reentrantReadWriteLock.readLock().lock();
+    playlists.forEach(i -> i.print(pr));
+    reentrantReadWriteLock.readLock().unlock();
+  }
+
+  /*
+  public Account(String[] data, final SongDataBase sdb) {
+    reentrantReadWriteLock.writeLock().lock();
+    playlists = new ArrayList<>();
+    loadAccountPlaylists(data, sdb);
+    reentrantReadWriteLock.writeLock().unlock();
+  }
+
   private void loadAccountPlaylists(String[] data, final SongDataBase sdb) {
     try {
       for (String playlistInfo : data) {
@@ -57,8 +61,8 @@ public class Account {
         final String substring =
             playlistInfo.substring(playlistInfo.indexOf("{") + 1, playlistInfo.indexOf("}"));
         try {
-          for (String j : substring.split(":")) {
-            Song song = sdb.getSong(Integer.parseInt(j.split("->")[0]));
+          for (String songId : substring.split(":")) {
+            Song song = sdb.getSong(Integer.parseInt(songId.split("->")[0]));
             if (song != null) {
               playlists.get(playlists.size() - 1).addSong(song);
             }
@@ -92,10 +96,5 @@ public class Account {
       reentrantReadWriteLock.readLock().unlock();
     }
   }
-
-  public void print(PrintWriter pr) {
-    reentrantReadWriteLock.readLock().lock();
-    playlists.forEach(i -> i.print(pr));
-    reentrantReadWriteLock.readLock().unlock();
-  }
+   */
 }

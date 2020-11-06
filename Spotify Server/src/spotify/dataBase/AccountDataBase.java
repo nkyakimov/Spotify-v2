@@ -4,7 +4,10 @@ import spotify.songs.Song;
 import spotify.songs.SongDataBase;
 
 import java.io.*;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 public class AccountDataBase {
   private final SongDataBase sdb;
@@ -22,22 +25,23 @@ public class AccountDataBase {
     load();
   }
 
+  public void addSong(String info) {
+    sdb.addSong(info);
+  }
+
   public boolean addAccount(String username, String password) {
     if (accounts.get(username) != null) return false;
     File newAccountFile = new File(dbAccountsLocation + username + ".sg");
-    try {
-      if (newAccountFile.createNewFile()) {
-        FileWriter fw = new FileWriter(newAccountFile);
+    if (createFile(dbAccountsLocation + username + ".sg")) {
+      try (FileWriter fw = new FileWriter(newAccountFile)) {
         fw.append(username).append(",").append(password).append(";");
-        fw.close();
         accounts.put(username, new Account());
         return true;
+      } catch (IOException e) {
+        return false;
       }
-      return false;
-    } catch (IOException e) {
-      System.err.println("Something went wrong with adding new account");
-      return false;
     }
+    return false;
   }
 
   private boolean validateAccount(String username, String password) {
@@ -47,6 +51,7 @@ public class AccountDataBase {
       while (account.hasNextLine()) {
         fileContent.append(account.nextLine());
       }
+
       account.close();
       String[] data = fileContent.substring(0, fileContent.indexOf(";")).split(",");
       if (data.length == 2) {
@@ -85,41 +90,20 @@ public class AccountDataBase {
   }
 
   private void loadSongCounter() {
-    try {
-      Scanner songC = new Scanner(new File(songCounterFile));
-      while (songC.hasNextLine()) {
-        String line = songC.nextLine();
-        String[] data = line.split(";");
-        for (String info : data) {
-          songCounter.put(
-              sdb.getSong(Integer.parseInt(info.split("->")[0])),
-              Integer.parseInt(info.split("->")[1]));
-        }
-      }
-      songC.close();
-    } catch (FileNotFoundException e) {
-      File file = new File(songCounterFile);
-      try {
-        if (!file.createNewFile()) throw new IOException();
-      } catch (IOException ioException) {
-        System.err.println("Cant create sdb file");
-      }
+    try (FileInputStream fis = new FileInputStream(songCounterFile);
+        ObjectInputStream ois = new ObjectInputStream(fis)) {
+      songCounter.putAll((Map<Song, Integer>) ois.readObject());
+    } catch (Exception e) {
+
     }
   }
 
   private void loadAccountDataBase() {
-    try (Scanner db = new Scanner(new File(dbAccountsLocation + "accounts.sg"))) {
-      while (db.hasNextLine()) {
-        String line = db.nextLine();
-        String[] accountsArr = line.split(";");
-        for (String i : accountsArr) {
-          String[] info = i.split(",");
-          accounts.put(
-              info[0], new Account(Arrays.stream(info).skip(1).toArray(String[]::new), sdb));
-        }
-      }
-    } catch (FileNotFoundException e) {
-      System.err.println("DataBase file not found");
+    try (FileInputStream fis = new FileInputStream(dbAccountsLocation + "accounts.sg");
+        ObjectInputStream ois = new ObjectInputStream(fis)) {
+      accounts.putAll((Map<String, Account>) ois.readObject());
+    } catch (Exception e) {
+
     }
   }
 
@@ -127,7 +111,6 @@ public class AccountDataBase {
     return sdb.getSongs(nameOrArtist);
   }
 
-  @SuppressWarnings("SuspiciousMethodCalls")
   public void top(int max, PrintWriter pw) {
     songCounter.keySet().stream()
         .sorted(Comparator.comparingInt(songCounter::get).reversed())
@@ -143,38 +126,52 @@ public class AccountDataBase {
     }
   }
 
+  public void printSDB() {
+    sdb.print();
+  }
+
   public void update() {
     updateAccountDataBase();
     updateSongCounter();
+    sdb.updateSongDataBase();
+  }
+
+  private boolean createFile(String filename) {
+    File file = new File(filename);
+    try {
+      return file.createNewFile();
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   private void updateSongCounter() {
-    try {
-      FileWriter songC = new FileWriter(new File(songCounterFile), false);
-      for (Map.Entry<Song, Integer> i : songCounter.entrySet()) {
-        songC
-            .append(i.getKey().getId().toString())
-            .append("->")
-            .append(i.getValue().toString())
-            .append(";\n");
+    try (FileOutputStream fop = new FileOutputStream(songCounterFile);
+        ObjectOutputStream oos = new ObjectOutputStream(fop)) {
+      oos.writeObject(songCounter);
+    } catch (FileNotFoundException e) {
+      if (createFile(songCounterFile)) {
+        updateAccountDataBase();
       }
-      songC.close();
     } catch (IOException e) {
-      System.err.println("Cannot update song counter");
+      System.err.println("Cannot update song counter file");
     }
   }
 
   private void updateAccountDataBase() {
-    try {
-      FileWriter adb = new FileWriter(new File(dbAccountsLocation + "accounts.sg"), false);
-      for (Map.Entry<String, Account> i : accounts.entrySet()) {
-        adb.append(i.getKey()).append(",");
-        adb.append(i.getValue().toFile());
-        adb.append(";\n");
+    try (FileOutputStream fop = new FileOutputStream(dbAccountsLocation + "accounts.sg");
+        ObjectOutputStream oos = new ObjectOutputStream(fop)) {
+      oos.writeObject(accounts);
+    } catch (FileNotFoundException e) {
+      if (createFile(dbAccountsLocation + "accounts.sg")) {
+        updateAccountDataBase();
       }
-      adb.close();
     } catch (IOException e) {
       System.err.println("Cannot update account songs file");
     }
+  }
+
+  public void removeSong(int parseInt) {
+    sdb.removeSong(parseInt);
   }
 }
