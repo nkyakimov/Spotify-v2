@@ -28,6 +28,7 @@ public class SpotifyServer {
         new Thread(
             () -> {
               BufferedReader admin = new BufferedReader(new InputStreamReader(System.in));
+              System.out.println("Type ? for help");
               while (true) {
                 String command;
                 try {
