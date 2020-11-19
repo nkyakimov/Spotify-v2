@@ -1,5 +1,7 @@
 package spotify.songs;
 
+import spotify.exceptions.SongAlreadyExsistsException;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,13 +16,14 @@ public class SongDataBase {
     loadSongDataBase();
   }
 
-  /*
   public Song getSong(final Integer id) {
     return songs.get(id);
   }
-  */
+
   public void print() {
-    songs.values().forEach(i -> System.out.println(i.toServer()));
+    songs
+        .values()
+        .forEach(song -> System.out.format("%-6s%-30s%-6s%-24s%-120s\n", song.toServer()));
   }
 
   public Song[] getSongs(final String nameOrArtist) {
@@ -67,10 +70,11 @@ public class SongDataBase {
 
       Map<Integer, Song> newSongs = new HashMap<>();
       newSongs.put(
-          1,
+          7,
           new Song(
               "7,Piano Sonata 2,32.51,Rachmaninoff,C:/Users/N/Desktop/Java/SU_JAVA/project_spotify/Spotify/songs/rachPS2.wav"
                   .split(",")));
+
       out.writeObject(newSongs);
       return true;
     } catch (IOException ignored) {
@@ -79,16 +83,17 @@ public class SongDataBase {
     return false;
   }
 
-  public void addSong(String info) {
+  public void addSong(String info) throws SongAlreadyExsistsException {
     try {
       String[] data = info.split(",");
-      if (songs.get(Integer.parseInt(data[0].trim())) == null) {
-        songs.put(Integer.parseInt(data[0].trim()), new Song(data));
+      int id = Integer.parseInt(data[0].trim());
+      if (songs.get(id) == null) {
+        songs.put((id), new Song(data));
       } else {
-        throw new Exception();
+        throw new SongAlreadyExsistsException("Song with id " + id + "already exits");
       }
-    } catch (Exception e) {
-      System.err.println("Cannot add song");
+    } catch (NumberFormatException e) {
+      System.err.println("ID of song is not a number");
     }
   }
 

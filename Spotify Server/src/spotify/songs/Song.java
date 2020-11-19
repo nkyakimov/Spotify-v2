@@ -18,7 +18,15 @@ public class Song implements Serializable {
       System.arraycopy(songInformation, 3, artist, 0, songInformation.length - 4);
     id = Integer.parseInt(songInformation[0]);
     name = songInformation[1];
-    length = Double.parseDouble(songInformation[2]);
+    double temp_time = 0;
+    try {
+      temp_time = Double.parseDouble(songInformation[2]);
+    } catch (NumberFormatException e) {
+      temp_time = 0;
+      System.err.println("Song time not written correctly (should be 3.45, not 3:45)");
+    } finally {
+      length = temp_time;
+    }
     artists = new ArrayList<>(Arrays.asList(artist));
     location = songInformation[songInformation.length - 1];
   }
@@ -28,7 +36,7 @@ public class Song implements Serializable {
   }
 
   public boolean match(String info) {
-    return Arrays.stream(info.replaceAll("( +)", " ").trim().split(" "))
+    return Arrays.stream(info.split(" +"))
         .allMatch(
             data ->
                 getArtists().stream()
@@ -59,7 +67,14 @@ public class Song implements Serializable {
   public String toString() {
     return name + "\t" + getLengthString() + "\t" + getArtists(); // + "  location: "+location;
   }
-  public String toServer() {
-    return "id "+id+" name "+name + "\t" + getLengthString() + "\t" + getArtists() + "  location: "+location;
+
+  public String[] toServer() {
+    return new String[] {
+      String.valueOf(id),
+      name,
+      getLengthString(),
+      Arrays.toString(artists.toArray(String[]::new)),
+      location
+    };
   }
 }

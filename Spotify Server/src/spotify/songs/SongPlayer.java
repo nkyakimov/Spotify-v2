@@ -1,5 +1,7 @@
 package spotify.songs;
 
+import spotify.exceptions.PlaybackErrorException;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -10,15 +12,10 @@ import java.net.Socket;
 public class SongPlayer implements Runnable {
   private final Song song;
   private final Socket socket;
-  private boolean stopped = false;
 
   public SongPlayer(Song song, Socket socket) {
     this.song = song;
     this.socket = socket;
-  }
-
-  public void stop() {
-    stopped = true;
   }
 
   private int toInt(AudioFormat.Encoding e) {
@@ -36,7 +33,7 @@ public class SongPlayer implements Runnable {
     return -1;
   }
 
-  private AudioInputStream getStream() {
+  private AudioInputStream getStream() throws FileNotFoundException, UnsupportedAudioFileException {
     try {
       PrintWriter pr = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
       AudioInputStream stream = AudioSystem.getAudioInputStream(new File(song.getLocation()));
@@ -52,11 +49,8 @@ public class SongPlayer implements Runnable {
       pr.println(format.isBigEndian());
       return stream;
     } catch (IOException | NullPointerException e) {
-      System.err.println("File not found");
-    } catch (UnsupportedAudioFileException e) {
-      System.err.println("File type not .wav");
+      throw new FileNotFoundException();
     }
-    return null;
   }
 
   @Override
@@ -65,19 +59,23 @@ public class SongPlayer implements Runnable {
     OutputStream osw = null;
     try {
       if (song == null) {
-        return;
+        throw new PlaybackErrorException();
       }
       osw = socket.getOutputStream();
-      AudioInputStream stream = getStream();
-      if (stream == null) {
-        throw new IOException();
-      }
+      AudioInputStream stream;
+      stream = getStream();
       int numRead;
       int size = 8192;
       byte[] buff = new byte[size];
-      while ((numRead = stream.read(buff)) >= 0 && !stopped) {
+      while ((numRead = stream.read(buff)) >= 0) {
         osw.write(buff, 0, numRead);
       }
+    } catch (PlaybackErrorException e) {
+      System.err.println("Something went wrong in streaming of file");
+    } catch (UnsupportedAudioFileException e) {
+      System.err.println("Audio file type not supported. Please use .wav only");
+    } catch (FileNotFoundException e) {
+      System.err.println("Song file not found. Check " + song.getLocation());
     } catch (IOException ignored) {
 
     } finally {
@@ -89,7 +87,7 @@ public class SongPlayer implements Runnable {
         }
         socket.close();
       } catch (IOException e) {
-        e.printStackTrace();
+        System.err.println("Error in closing song player outputs");
       }
     }
   }
