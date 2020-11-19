@@ -1,19 +1,18 @@
 package spotify.client;
 
 import javax.sound.sampled.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 
 public class Player implements Runnable {
   private final int socketAddress;
   private boolean stopped = false;
+  private final int id;
   private Socket socket;
 
-  public Player(int socketAddress) {
+  public Player(int socketAddress,int id) {
     this.socketAddress = socketAddress;
+    this.id = id;
   }
 
   public void stop() {
@@ -38,6 +37,8 @@ public class Player implements Runnable {
     try {
       socket = new Socket("localhost", socketAddress);
       is = socket.getInputStream();
+      PrintWriter printWriter = new PrintWriter(socket.getOutputStream(),true);
+      printWriter.println(id);
       br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       AudioFormat format =
           new AudioFormat(
@@ -62,7 +63,7 @@ public class Player implements Runnable {
       line.stop();
 
     } catch (IOException | NullPointerException | LineUnavailableException ignored) {
-
+      ignored.printStackTrace();
     } catch (IllegalArgumentException e) {
       System.err.println("Something is wrong");
     } finally {
