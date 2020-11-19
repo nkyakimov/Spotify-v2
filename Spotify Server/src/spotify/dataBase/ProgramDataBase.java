@@ -1,22 +1,24 @@
 package spotify.dataBase;
 
+import spotify.exceptions.AccountCreationWentWrong;
 import spotify.songs.Song;
 import spotify.songs.SongDataBase;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class AccountDataBase {
+public class ProgramDataBase {
   private final SongDataBase sdb;
   private final String dbAccountsLocation;
   private final String songCounterFile;
   private final Map<String, Account> accounts;
-  private final Map<Song, Integer> songCounter;
+  private final Map<Integer, Integer> songCounter;
 
-  public AccountDataBase(String adb, String sdb, String songsC) {
+  public ProgramDataBase(String adb, String sdb, String songsC) {
     dbAccountsLocation = adb;
     this.sdb = new SongDataBase(sdb);
     accounts = new HashMap<>();
@@ -29,19 +31,21 @@ public class AccountDataBase {
     sdb.addSong(info);
   }
 
-  public boolean addAccount(String username, String password) {
-    if (accounts.get(username) != null) return false;
+  public void addAccount(String username, String password)
+      throws FileAlreadyExistsException, AccountCreationWentWrong {
+    if (accounts.get(username) != null) {
+      throw new FileAlreadyExistsException("User " + username + " already exists");
+    }
     File newAccountFile = new File(dbAccountsLocation + username + ".sg");
     if (createFile(dbAccountsLocation + username + ".sg")) {
       try (FileWriter fw = new FileWriter(newAccountFile)) {
         fw.append(username).append(",").append(password).append(";");
         accounts.put(username, new Account());
-        return true;
       } catch (IOException e) {
-        return false;
+        throw new AccountCreationWentWrong();
       }
     }
-    return false;
+    throw new FileAlreadyExistsException("Account " + username + " already exists");
   }
 
   private boolean validateAccount(String username, String password) {
@@ -92,8 +96,8 @@ public class AccountDataBase {
   private void loadSongCounter() {
     try (FileInputStream fis = new FileInputStream(songCounterFile);
         ObjectInputStream ois = new ObjectInputStream(fis)) {
-      songCounter.putAll((Map<Song, Integer>) ois.readObject());
-    } catch (Exception e) {
+      songCounter.putAll((Map<Integer, Integer>) ois.readObject());
+    } catch (Exception ignored) {
 
     }
   }
@@ -102,7 +106,7 @@ public class AccountDataBase {
     try (FileInputStream fis = new FileInputStream(dbAccountsLocation + "accounts.sg");
         ObjectInputStream ois = new ObjectInputStream(fis)) {
       accounts.putAll((Map<String, Account>) ois.readObject());
-    } catch (Exception e) {
+    } catch (Exception ignored) {
 
     }
   }
@@ -115,14 +119,14 @@ public class AccountDataBase {
     songCounter.keySet().stream()
         .sorted(Comparator.comparingInt(songCounter::get).reversed())
         .limit(max)
-        .forEach(i -> pw.println("#" + songCounter.get(i) + "  " + i));
+        .forEach(i -> pw.println("#" + songCounter.get(i) + "  " + getSong(i)));
   }
 
   public void listen(Song i) {
-    if (songCounter.get(i) == null) {
-      songCounter.put(i, 1);
+    if (songCounter.get(i.getId()) == null) {
+      songCounter.put(i.getId(), 1);
     } else {
-      songCounter.replace(i, songCounter.get(i) + 1);
+      songCounter.replace(i.getId(), songCounter.get(i.getId()) + 1);
     }
   }
 
@@ -151,7 +155,7 @@ public class AccountDataBase {
       oos.writeObject(songCounter);
     } catch (FileNotFoundException e) {
       if (createFile(songCounterFile)) {
-        updateSongCounter();
+        updateAccountDataBase();
       }
     } catch (IOException e) {
       System.err.println("Cannot update song counter file");
@@ -173,5 +177,9 @@ public class AccountDataBase {
 
   public void removeSong(int parseInt) {
     sdb.removeSong(parseInt);
+  }
+
+  public Song getSong(final int index) {
+    return sdb.getSong(index);
   }
 }

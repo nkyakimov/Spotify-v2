@@ -69,22 +69,7 @@ public class Playlist implements Serializable {
     return String.format("%.2f", time).replace(",", ":");
   }
 
-  /*
-  public String toFile() {
-    reentrantReadWriteLock.readLock().lock();
-    StringBuilder data = new StringBuilder(name + "{");
-    for (Song song : songs) {
-      data.append(song.getId()).append(":");
-    }
-    if (data.charAt(data.length() - 1) == ':') {
-      data = new StringBuilder(data.substring(0, data.length() - 1));
-    }
 
-    data.append("}");
-    reentrantReadWriteLock.readLock().unlock();
-    return data.toString();
-  }
-*/
 
   /**
    *
