@@ -15,13 +15,17 @@ import java.net.Socket;
 public class Player implements Runnable {
     private final int socketAddress;
     private final String host;
-    private final int songID;
+    private final String songID;
     private boolean stopped = false;
 
-    public Player(String host, int socketAddress, int songID) {
+    public Player(String host, int socketAddress, String songID) {
         this.socketAddress = socketAddress;
         this.host = host;
         this.songID = songID;
+    }
+
+    public boolean getStatus() {
+        return stopped;
     }
 
     public void stop() {
@@ -43,7 +47,6 @@ public class Player implements Runnable {
             SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
             line.open(format);
             line.start();
-            //is.reset();
             int numRead;
             byte[] buff = new byte[512];
             while ((numRead = is.read(buff)) >= 0 && !stopped) {
@@ -51,9 +54,10 @@ public class Player implements Runnable {
             }
             line.drain();
             line.stop();
-        } catch (IOException | LineUnavailableException e) {
+        } catch (IOException | LineUnavailableException | IllegalArgumentException e) {
             System.err.println("Something is wrong");
         } finally {
+            stopped = true;
             System.out.println("Stopped playing");
         }
     }
@@ -68,7 +72,7 @@ public class Player implements Runnable {
                     Integer.parseInt(reader.readLine()),
                     Float.parseFloat(reader.readLine()),
                     Boolean.parseBoolean(reader.readLine()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return null;
         }
     }

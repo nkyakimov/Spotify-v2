@@ -10,7 +10,7 @@ public class Main {
     private static final int port = 8189;
     private static Player player;
     private static int splSocket;
-    private static int songId = -1;
+    private static String songId = "";
 
     public static void main(String[] args) {
         runSpotifyClient();
@@ -46,11 +46,14 @@ public class Main {
 
     private synchronized static void playerStop() {
         try {
-            player.stop();
-            Thread.sleep(1000);
-            player = null;
+            if (!player.getStatus()) {
+                player.stop();
+                Thread.sleep(1000);
+            }
         } catch (Exception ignored) {
 
+        } finally {
+            player = null;
         }
     }
 
@@ -78,16 +81,16 @@ public class Main {
 
     private synchronized static void getSongIdAndStart(String id) {
         try {
-            songId = Integer.parseInt(id.trim());
+            songId = id;
             play();
         } catch (NumberFormatException e) {
-            songId = -1;
+            songId = "";
         }
     }
 
     private synchronized static void play() {
         playerStop();
-        int temp = songId;
+        String temp = songId;
         new Thread((player = new Player(host, splSocket, temp))).start();
     }
 }
