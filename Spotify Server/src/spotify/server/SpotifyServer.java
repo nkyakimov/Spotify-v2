@@ -25,9 +25,9 @@ public class SpotifyServer {
     private boolean running = true;
 
     public SpotifyServer() throws IOException {
-        this.program = new ProgramDataBase(ACCOUNTS_FOLDER, SONG_DATA_BASE, SONG_COUNTER);
-        this.clientServerSocket = new ServerSocket(clientSocket);
-        this.playerServerSocket = new ServerSocket(playerSocket);
+        program = new ProgramDataBase(ACCOUNTS_FOLDER, SONG_DATA_BASE, SONG_COUNTER);
+        clientServerSocket = new ServerSocket(clientSocket);
+        playerServerSocket = new ServerSocket(playerSocket);
     }
 
     public static void main(String[] args) {
@@ -48,10 +48,11 @@ public class SpotifyServer {
         System.out.println("add <id>,<name>,<length>,<artist>,...,<artist>,<location>");
         System.out.println("remove <id>");
         System.out.println("print");
+        System.out.println("quit");
     }
 
-    private void update() {
-        program.update();
+    private void updateSDB() {
+        program.updateSDB();
     }
 
     private void print() {
@@ -78,12 +79,12 @@ public class SpotifyServer {
                             String command = admin.readLine();
                             if (command.startsWith("add")) {
                                 addSong(command.substring(4));
-                                update();
+                                updateSDB();
                             } else if (command.startsWith("?")) {
                                 help();
                             } else if (command.startsWith("remove")) {
                                 removeSong(Integer.parseInt(command.substring(7)));
-                                update();
+                                updateSDB();
                             } else if (command.equals("print")) {
                                 print();
                             } else if (command.equals("quit")) {
@@ -91,14 +92,14 @@ public class SpotifyServer {
                             }
                         }
                     } catch (Exception ignored) {
-                        update();
+                        updateSDB();
                     }
                 }
         ).start();
     }
 
     private void exit() {
-        update();
+        program.update();
         System.out.println("Goodbye");
         running = false;
         try {
@@ -121,7 +122,7 @@ public class SpotifyServer {
                             Socket socket = playerServerSocket.accept();
                             BufferedReader bf =
                                     new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                            int id = Integer.parseInt(bf.readLine());
+                            String id = bf.readLine();
                             new Thread(new SongPlayer(program.getSong(id), socket)).start();
                         }
                     } catch (IOException e) {

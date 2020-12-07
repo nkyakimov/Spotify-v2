@@ -103,6 +103,7 @@ public class SpotifyClientHandler implements Runnable {
             }
         } catch (IOException | NullPointerException ignored) {
             //System.out.println("Client Left");
+            quit();
         }
     }
 
@@ -126,8 +127,8 @@ public class SpotifyClientHandler implements Runnable {
     private void deleteUser(String request, PrintWriter writer) {
         if (program.removeAccount(request.split(" ")[2], request.split(" ")[3])) {
             writer.println(USER + REMOVED);
-            currentAccount = null;
-            writer.println(LOGGED_OUT);
+            logout(writer);
+            program.updateAccountDataBase();
         } else {
             writer.println(WRONG_ACCOUNT);
         }
@@ -144,6 +145,7 @@ public class SpotifyClientHandler implements Runnable {
                 if (playlist.remove(chooseSong(request.substring(request.indexOf(" ", space))
                         .trim(), writer, bufferedReader))) {
                     writer.println(SONG + REMOVED);
+                    program.updateAccountDataBase();
                 } else {
                     throw new NullPointerException();
                 }
@@ -161,6 +163,7 @@ public class SpotifyClientHandler implements Runnable {
                 currentAccount.print(writer);
             }
         } catch (NullPointerException e) {
+            //e.printStackTrace();
             writer.println(NOT_LOGGED_IN);
         } catch (Exception e) {
             writer.println(PLAYLIST + NOT_EXIST);
@@ -171,6 +174,7 @@ public class SpotifyClientHandler implements Runnable {
     private void logout(PrintWriter writer) {
         currentAccount = null;
         writer.println(LOGGED_OUT);
+        program.updateSongCounter();
     }
 
     private void createPlaylist(String request, PrintWriter writer) {
@@ -179,8 +183,9 @@ public class SpotifyClientHandler implements Runnable {
         } else {
             if (currentAccount.newPlaylist(request.substring(7).trim())) {
                 writer.println(PLAYLIST + ADDED);
+                program.updateAccountDataBase();
             } else {
-                writer.println(SOMETHING_WRONG);
+                writer.println(PLAYLIST+THERE);
             }
         }
     }
@@ -197,6 +202,7 @@ public class SpotifyClientHandler implements Runnable {
             }
             if (playlist.addSong(chooseSong(info[2], writer, bufferedReader))) {
                 writer.println(SONG + ADDED);
+                program.updateAccountDataBase();
             } else {
                 writer.println(SONG + NOT + ADDED);
             }
@@ -234,8 +240,10 @@ public class SpotifyClientHandler implements Runnable {
         } catch (FileAlreadyExistsException e) {
             writer.println(USER + THERE);
         } catch (AccountCreationWentWrong e) {
-            System.err.println(SOMETHING_WRONG + WITH + ACCOUNT_CREATION);
+            //System.err.println(SOMETHING_WRONG + WITH + ACCOUNT_CREATION);
             writer.println(SOMETHING_WRONG);
+        } finally {
+            program.updateAccountDataBase();
         }
     }
 
@@ -258,6 +266,10 @@ public class SpotifyClientHandler implements Runnable {
         try {
             socket.close();
         } catch (IOException ignored) {
+
+        } finally {
+            program.updateAccountDataBase();
+            program.updateSongCounter();
         }
     }
 }
