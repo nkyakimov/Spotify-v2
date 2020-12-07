@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Account implements Serializable {
-    private final List<Playlist> playlists;
     private transient static final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
+    private final List<Playlist> playlists;
 
     public Account() {
         playlists = new ArrayList<>();
@@ -57,5 +57,9 @@ public class Account implements Serializable {
         } finally {
             reentrantReadWriteLock.readLock().unlock();
         }
+    }
+
+    public void cleanNotValidSongs(SongDataBase sdb) {
+        playlists.forEach(playlist -> playlist.cleanNotValidSongs(sdb));
     }
 }

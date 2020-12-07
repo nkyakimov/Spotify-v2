@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class SongDataBase {
     private final String dbSongsLocation;
-    private Map<Integer, Song> songs;
+    private Map<String, Song> songs;
 
     public SongDataBase(String dbSongsLocation) {
         this.dbSongsLocation = dbSongsLocation;
@@ -28,12 +28,12 @@ public class SongDataBase {
         loadSongDataBase();
     }
 
-    public Song getSong(final Integer id) {
+    public Song getSong(String id) {
         return songs.get(id);
     }
 
     public void print() {
-        songs.values().forEach(song -> System.out.format("%-6s%-30s%-6s%-24s%-120s\n", (Object[]) song.toServer()));
+        songs.values().forEach(song -> System.out.format("%-9s%-30s%-6s%-24s%-120s\n", (Object[]) song.toServer()));
     }
 
     public List<Song> getSongs(final String nameOrArtist) {
@@ -43,7 +43,7 @@ public class SongDataBase {
     private void loadSongDataBase() {
         try (FileInputStream fis = new FileInputStream(dbSongsLocation);
                 ObjectInputStream ois = new ObjectInputStream(fis)) {
-            songs = (ConcurrentHashMap<Integer, Song>) ois.readObject();
+            songs = (ConcurrentHashMap<String, Song>) ois.readObject();
         } catch (FileNotFoundException e) {
             if (createDemoSongDataBase()) {
                 loadSongDataBase();
@@ -74,14 +74,13 @@ public class SongDataBase {
             } else {
                 try (FileOutputStream file = new FileOutputStream(dbSongsLocation);
                         ObjectOutputStream out = new ObjectOutputStream(file)) {
-                    Map<Integer, Song> newSongs = new ConcurrentHashMap<>();
-                    newSongs.put(
-                            7,
-                            new Song(7, "Piano Sonata 2", 32.51,
+                    songs = new ConcurrentHashMap<>();
+                    songs.put(
+                            "A7G6",
+                            new Song("A7G6", "Piano Sonata 2", 32.51,
                                     Collections.singletonList("Rachmaninoff"),
-                                    "C:/Users/N/Desktop/Java/SU_JAVA/project_spotify/Spotify/songs/rachPS2.wav".replaceAll("//", File.separator)));
-
-                    out.writeObject(newSongs);
+                                    System.getProperty("user.dir") + File.separator + "songs" + File.separator + "rachPS2.wav"));
+                    out.writeObject(songs);
                     return true;
                 } catch (IOException ignored) {
                     return false;
@@ -98,13 +97,12 @@ public class SongDataBase {
             if (data.length < 5) {
                 throw new RuntimeException("Song Data not correct");
             }
-            int id = Integer.parseInt(data[0].trim());
-            String name = data[1];
+            String name = data[1].trim();
             double length = Double.parseDouble(data[2]);
-            String location = data[data.length - 1];
+            String location = data[data.length - 1].trim();
             List<String> artists = new ArrayList<>(Arrays.asList(data).subList(3, data.length - 1));
-            if (songs.putIfAbsent(id, new Song(id, name, length, artists, location)) != null) {
-                throw new SongAlreadyExsistsException("Song with id " + id + "already exits");
+            if (songs.putIfAbsent(data[0], new Song(data[0], name, length, artists, location)) != null) {
+                throw new SongAlreadyExsistsException("Song with id " + data[0] + "already exits");
             }
         } catch (NumberFormatException e) {
             System.err.println("ID of song is not a number");
