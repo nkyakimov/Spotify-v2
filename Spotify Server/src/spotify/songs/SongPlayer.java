@@ -53,6 +53,7 @@ public class SongPlayer implements Runnable {
             pr.println(format.isBigEndian());
             return stream;
         } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
             throw new FileNotFoundException();
         }
     }
@@ -76,6 +77,7 @@ public class SongPlayer implements Runnable {
         } catch (UnsupportedAudioFileException e) {
             System.err.println("Audio file type not supported. Please use .wav only");
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
             System.err.println("Song file not found. Check " + song.getLocation());
         } catch (IOException ignored) {
 

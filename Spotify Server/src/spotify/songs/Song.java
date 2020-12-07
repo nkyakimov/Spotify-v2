@@ -5,14 +5,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Song implements Serializable {
-    private final Integer id;
+    private final String id;
     private final String name;
     private final double length;
     private final List<String> artists;
     private final String location;
     public static final long serialVersionUID = -7413920028814202069L;
 
-    public Song(Integer id, String name, double length, List<String> artists, String location) {
+    public Song(String id, String name, double length, List<String> artists, String location) {
         this.id = id;
         this.name = name;
         this.length = length;
@@ -33,7 +33,7 @@ public class Song implements Serializable {
                                         || getName().toLowerCase().contains(data.toLowerCase()));
     }
 
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 
@@ -59,7 +59,7 @@ public class Song implements Serializable {
 
     public String[] toServer() {
         return new String[]{
-                String.valueOf(id),
+                id,
                 name,
                 getLengthString(),
                 Arrays.toString(artists.toArray(String[]::new)),

@@ -1,5 +1,8 @@
 package spotify.songs;
 
+import spotify.dataBase.SongDataBase;
+
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -7,13 +10,20 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Playlist implements Serializable {
-    private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
+    private static final long serialVersionUID = -7307503366069548787L;
     private final List<Song> songs;
     private final String name;
+    private transient ReentrantReadWriteLock reentrantReadWriteLock;
 
     public Playlist(String name) {
         this.name = name.trim();
         this.songs = new ArrayList<>();
+    }
+
+    private void readObject(java.io.ObjectInputStream in)
+            throws ClassNotFoundException, IOException {
+        in.defaultReadObject();
+        reentrantReadWriteLock = new ReentrantReadWriteLock();
     }
 
     /**
@@ -22,7 +32,9 @@ public class Playlist implements Serializable {
     public boolean remove(Song i) {
         try {
             reentrantReadWriteLock.writeLock().lock();
-            if (i == null) throw new NullPointerException();
+            if (i == null) {
+                throw new NullPointerException();
+            }
             return songs.remove(i);
         } finally {
             reentrantReadWriteLock.writeLock().unlock();
@@ -64,7 +76,7 @@ public class Playlist implements Serializable {
     public boolean addSong(Song song) {
         try {
             reentrantReadWriteLock.writeLock().lock();
-            if (song != null && songs.stream().noneMatch(otherSong -> otherSong == song)) {
+            if (song != null && songs.stream().noneMatch(otherSong -> otherSong.getId().equals(song.getId()))) {
                 songs.add(song);
                 return true;
             }
@@ -96,5 +108,9 @@ public class Playlist implements Serializable {
         } finally {
             reentrantReadWriteLock.readLock().unlock();
         }
+    }
+
+    public void cleanNotValidSongs(SongDataBase sdb) {
+        songs.removeIf(song -> sdb.getSong(song.getId()) == null);
     }
 }
