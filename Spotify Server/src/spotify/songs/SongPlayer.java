@@ -13,9 +13,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class SongPlayer implements Runnable {
+    private static final String FILE_ERROR = "Something went wrong in streaming of file";
+    private static final String AUDIO_TYPE_ERROR = "Audio file type not supported. Please use .wav only";
+    private static final String SONG_NOT_FOUND = "Song file not found. Check ";
+    private static final String ERROR_CLOSING_SOCKET = "Error in closing song player socket";
+    private final int bufferSize = (int) Math.pow(4, 8);
     private final Song song;
     private final Socket socket;
 
@@ -66,27 +70,26 @@ public class SongPlayer implements Runnable {
             }
             AudioInputStream stream = getStream();
             int numRead;
-            int size = 8192;
-            byte[] buff = new byte[size];
+            byte[] buff = new byte[bufferSize];
             while ((numRead = stream.read(buff)) >= 0) {
                 osw.write(buff, 0, numRead);
             }
+            osw.flush();
         } catch (PlaybackErrorException e) {
             e.printStackTrace();
-            System.err.println("Something went wrong in streaming of file");
+            System.err.println(FILE_ERROR);
         } catch (UnsupportedAudioFileException e) {
-            System.err.println("Audio file type not supported. Please use .wav only");
+            System.err.println(AUDIO_TYPE_ERROR);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            System.err.println("Song file not found. Check " + song.getLocation());
+            System.err.println(SONG_NOT_FOUND + song.getLocation());
         } catch (IOException ignored) {
 
         } finally {
             try {
-                //System.out.println("Playback stopped");
                 socket.close();
             } catch (IOException e) {
-                System.err.println("Error in closing song player socket");
+                System.err.println(ERROR_CLOSING_SOCKET);
             }
         }
     }

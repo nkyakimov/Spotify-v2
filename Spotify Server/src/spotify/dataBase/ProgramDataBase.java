@@ -22,6 +22,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ProgramDataBase {
+    private static final String CANNOT_UPDATE = "Cannot update ";
+    private static final String SONG_COUNTER = "song counter file";
+    private static final String ACCOUNT_FILE = "account file";
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final SongDataBase sdb;
     private final String dbAccountsLocation;
@@ -196,7 +199,7 @@ public class ProgramDataBase {
                     updateAccountDataBase();
                 }
             } catch (IOException e) {
-                System.err.println("Cannot update song counter file");
+                System.err.println(CANNOT_UPDATE+SONG_COUNTER);
             }
         } finally {
             lock.writeLock().unlock();
@@ -214,7 +217,7 @@ public class ProgramDataBase {
                     updateAccountDataBase();
                 }
             } catch (IOException e) {
-                System.err.println("Cannot update account songs file");
+                System.err.println(CANNOT_UPDATE+ACCOUNT_FILE);
             }
         } finally {
             lock.writeLock().unlock();

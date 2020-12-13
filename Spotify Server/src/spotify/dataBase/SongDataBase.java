@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class SongDataBase {
+    private static final String FORMAT = "%-9s%-30s%-6s%-24s%-120s\n";
     private final String dbSongsLocation;
     private Map<String, Song> songs;
 
@@ -33,7 +34,7 @@ public class SongDataBase {
     }
 
     public void print() {
-        songs.values().forEach(song -> System.out.format("%-9s%-30s%-6s%-24s%-120s\n", (Object[]) song.toServer()));
+        songs.values().forEach(song -> System.out.format(FORMAT, (Object[]) song.toServer()));
     }
 
     public List<Song> getSongs(final String nameOrArtist) {

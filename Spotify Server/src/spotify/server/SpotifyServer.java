@@ -12,13 +12,16 @@ import java.net.Socket;
 
 
 public class SpotifyServer {
+    private static final int clientSocket = 8189;
+    private static final int playerSocket = 8152;
     private static final String src = System.getProperty("user.dir");
     private static final String delimiter = File.separator;
     private static final String ACCOUNTS_FOLDER = src + delimiter + "accounts" + delimiter;
     private static final String SONG_DATA_BASE = src + delimiter + "songs" + delimiter + "songs.sg";
     private static final String SONG_COUNTER = src + delimiter + "songs" + delimiter + "songCounter.sg";
-    private static final int clientSocket = 8189;
-    private static final int playerSocket = 8152;
+    private static final String SOMETHING_WRONG = "Something went wrong when creating ";
+    private static final String SONG_PLAYER = "song player";
+    private static final String CLIENT_HANDLER = "client handler";
     private final ProgramDataBase program;
     private final ServerSocket clientServerSocket;
     private final ServerSocket playerServerSocket;
@@ -126,7 +129,7 @@ public class SpotifyServer {
                             new Thread(new SongPlayer(program.getSong(id), socket)).start();
                         }
                     } catch (IOException e) {
-                        System.err.println("Something went wrong when creating song player");
+                        System.err.println(SOMETHING_WRONG + SONG_PLAYER);
                     }
                 }
         ).start();
@@ -142,7 +145,7 @@ public class SpotifyServer {
                                     program, socket, playerSocket)).start();
                         }
                     } catch (IOException e) {
-                        System.err.println("Something went wrong when creating starting client handler");
+                        System.err.println(SOMETHING_WRONG + CLIENT_HANDLER);
                     }
                 }
         ).start();
