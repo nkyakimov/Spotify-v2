@@ -13,6 +13,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class Player implements Runnable {
+    private final String ERROR = "Something is wrong";
+    private final String STOPPED = "Stopped playing";
     private final int socketAddress;
     private final String host;
     private final String songID;
@@ -48,17 +50,17 @@ public class Player implements Runnable {
             line.open(format);
             line.start();
             int numRead;
-            byte[] buff = new byte[512];
+            byte[] buff = new byte[2048];
             while ((numRead = is.read(buff)) >= 0 && !stopped) {
                 line.write(buff, 0, numRead);
             }
             line.drain();
             line.stop();
         } catch (IOException | LineUnavailableException | IllegalArgumentException e) {
-            System.err.println("Something is wrong");
+            System.err.println(ERROR);
         } finally {
             stopped = true;
-            System.out.println("Stopped playing");
+            System.out.println(STOPPED);
         }
     }
 

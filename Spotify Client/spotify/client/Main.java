@@ -8,6 +8,10 @@ import java.net.Socket;
 public class Main {
     private static final String host = "localhost";
     private static final int port = 8189;
+    private static final String ERROR_START = "Something went wrong. Is the server on?";
+    private static final String TERMINATED = "Connection terminated";
+    private static final String NO_SUCH_SONG = "No such song";
+    private static final String SONG_ID = "songID ";
     private static Player player;
     private static int splSocket;
     private static String songId = "";
@@ -22,8 +26,6 @@ public class Main {
                     PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in))) {
-
-                System.out.print(">");
                 splSocket = Integer.parseInt(reader.readLine());
                 launchConsoleOut(reader);
                 while (true) {
@@ -39,7 +41,7 @@ public class Main {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Something went wrong. Is the server on?");
+                System.err.println(ERROR_START);
             }
         }).start();
     }
@@ -64,16 +66,16 @@ public class Main {
                     try {
                         while (true) {
                             String result = bf.readLine();
-                            if (result.equals("No such song")) {
+                            if (result.equals(NO_SUCH_SONG)) {
                                 playerStop();
-                            } else if (result.startsWith("songID ")) {
+                            } else if (result.startsWith(SONG_ID)) {
                                 getSongIdAndStart(result.substring(7));
                                 continue;
                             }
                             System.out.println(result);
                         }
                     } catch (Exception e) {
-                        System.out.println("Connection terminated");
+                        System.out.println(TERMINATED);
                         System.exit(0);
                     }
                 }).start();
